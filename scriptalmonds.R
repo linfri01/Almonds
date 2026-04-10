@@ -399,7 +399,8 @@ writeLines(c(
 usethis::use_git() 
 usethis::use_github() 
 
-# per rimuovere i file già tracciati da git, ma che ora sono stati aggiunti al .gitignore
+# per rimuovere i file già tracciati da git, 
+# ma che ora sono stati aggiunti al .gitignore
 system("git rm -r --cached data/data_raw")
 system("git rm -r --cached data/data_clean")
 system("git rm --cached *.Rproj")
