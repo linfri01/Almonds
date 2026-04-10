@@ -390,5 +390,14 @@ writeLines(c(
 usethis::use_git()
 usethis::use_github()
 
+# per rimuovere i file già tracciati da git, ma che ora sono stati aggiunti al .gitignore
+system("git rm -r --cached data/data_raw")
+system("git rm -r --cached data/data_clean")
+# questo comando rimuove i file dalla cache di git, ma li lascia intatti nella cartella locale
+system('git commit -m "Remove data from repository (ignored via gitignore)"')
+
+# per fare il commit e push delle modifiche al repository GitHub
+system("git push origin master")
+
 
 
