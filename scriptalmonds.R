@@ -408,7 +408,7 @@ system('git commit -m "Remove data from repository (ignored via gitignore)"')
 # per fare il commit e push delle modifiche al repository GitHub
 system("git push origin master")
 
-
+system("git status")
 
 
 
