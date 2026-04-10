@@ -375,8 +375,8 @@ ggsave("figures/allocazione_biomassa_trattamento.png", width = 8, height = 6, dp
 ### PARTE 11: GITHUB ####
 system('git config --global user.email "linda.frigioni@student.univaq.it"')
 system('git config --global user.name "Linda Frigioni"')
-
-
+usethis::use_git()
+usethis::use_github()
 
 
 
