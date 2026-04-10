@@ -310,6 +310,9 @@ data_new %>%
 # Calcolo il peso medio di ogni componente del frutto (Pericarpo, Endocarpo, Seme) 
 # per ogni combinazione di Varieta e Trattamento
 
+#Largueta produce frutti piu pesanti, con endocarpo più pesante
+# Espoir produce frutti più leggeri
+
 peso_summary_plot <- fruit_long %>%
   group_by(Varieta, Componente) %>%
   summarise(Peso_medio = mean(Peso_comp, na.rm = TRUE), # calcolo media del peso di ogni componente 
@@ -332,6 +335,9 @@ ggplot(peso_summary_plot, aes(x = Varieta, y = Peso_medio, fill = Componente)) +
   )
 
 ### biomassa vs trattamento ####
+
+# Bagged ha una sola osservazione (non c'è valore medio)
+# Open+HP ha frutti più pesanti, ma con rese simili a Open
 peso_summary_plot2 <- fruit_long %>%
   group_by(Trattamento, Componente) %>%
   summarise(Peso_medio = mean(Peso_comp, na.rm = TRUE), .groups = "drop")
@@ -373,9 +379,12 @@ ggsave("figures/allocazione_biomassa_trattamento.png", width = 8, height = 6, dp
 
 
 ### PARTE 11: GITHUB ####
+
+
 system('git config --global user.email "linda.frigioni@student.univaq.it"')
 system('git config --global user.name "Linda Frigioni"')
 
+# per escludere i file che non devono andare su github
 file.create(".gitignore")
 
 writeLines(c(
@@ -387,8 +396,8 @@ writeLines(c(
 ), ".gitignore")
 
 
-usethis::use_git()
-usethis::use_github()
+usethis::use_git() 
+usethis::use_github() 
 
 # per rimuovere i file già tracciati da git, ma che ora sono stati aggiunti al .gitignore
 system("git rm -r --cached data/data_raw")
@@ -398,6 +407,10 @@ system('git commit -m "Remove data from repository (ignored via gitignore)"')
 
 # per fare il commit e push delle modifiche al repository GitHub
 system("git push origin master")
+
+
+
+
 
 
 
