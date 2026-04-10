@@ -402,6 +402,7 @@ usethis::use_github()
 # per rimuovere i file già tracciati da git, ma che ora sono stati aggiunti al .gitignore
 system("git rm -r --cached data/data_raw")
 system("git rm -r --cached data/data_clean")
+system("git rm --cached *.Rproj")
 # questo comando rimuove i file dalla cache di git, ma li lascia intatti nella cartella locale
 system('git commit -m "Remove data from repository (ignored via gitignore)"')
 
