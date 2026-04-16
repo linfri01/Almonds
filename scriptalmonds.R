@@ -380,10 +380,6 @@ ggsave("figures/allocazione_biomassa_trattamento.png", width = 8, height = 6, dp
 
 ### PARTE 11: GITHUB ####
 
-
-system('git config --global user.email "linda.frigioni@student.univaq.it"')
-system('git config --global user.name "Linda Frigioni"')
-
 # per escludere i file che non devono andare su github
 file.create(".gitignore")
 
@@ -395,11 +391,11 @@ writeLines(c(
   "data/data_clean/"
 ), ".gitignore")
 
-
+# per inizializzare il repository git e collegarlo a GitHub
 usethis::use_git() 
 usethis::use_github() 
 
-# per rimuovere i file già tracciati da git, 
+# per rimuovere i file già tracciati da git prima che aggiungessi .gitignore, 
 # ma che ora sono stati aggiunti al .gitignore
 system("git rm -r --cached data/data_raw")
 system("git rm -r --cached data/data_clean")
@@ -409,7 +405,7 @@ system('git commit -m "Remove data from repository (ignored via gitignore)"')
 
 # per fare il commit e push delle modifiche al repository GitHub
 system("git push origin master")
-
+# controllo stato del repository dopo il push
 system("git status")
 
 
