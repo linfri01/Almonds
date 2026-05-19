@@ -19,8 +19,7 @@ library(tidyr)
 # entomofila alla qualità dei frutti di mandorlo.
 # Di seguito vengono analizzati i dati del secondo foglio "Fruit_quality".
 
-# Setto la working directory e importo il dataset
-setwd("C:/Users/linda/Desktop/Almonds")
+
 getwd() # per controllare che la working directory sia corretta
 
 dati_raw <- read.csv2("data/data_raw/Fruit_quality.CSV") 
@@ -246,7 +245,7 @@ head(count_peso_tot)
 
 ggplot(count_peso_tot, aes(x = Peso_tot_classe, y = n, fill = Peso_tot_classe)) +
   geom_col(show.legend = FALSE) + # per evitare una legenda ridondante
-  facet_wrap(~ Varieta) + # per creare un grafico separato per ogni varietà
+  facet_wrap(~ Varieta,  scales= "free") + # per creare un grafico separato per ogni varietà
   labs(
     title = "Distribuzione osservazioni per classe di peso del frutto",
     x = "Classe di peso",
@@ -304,7 +303,7 @@ data_new %>%
     axis.title.y = element_text(margin = margin(r = 15)) 
     )
 
-
+str(data_new)
 ### biomassa vs varietà ####
 # ALLOCAZIONE DELLA BIOMASSA NEL FRUTTO RISPETTO ALLA VARIETA E AL TRATTAMENTO
 # Calcolo il peso medio di ogni componente del frutto (Pericarpo, Endocarpo, Seme) 
