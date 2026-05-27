@@ -360,14 +360,20 @@ count_peso_tot <- data_new %>%
   group_by(Varieta, Peso_tot_classe) %>%
   summarise(n = n(), .groups = "drop") %>% 
   mutate( # drop serve a evitare che mutate non avvenga per gruppo, ma per tutto il dataset
-    Peso_tot_classe = factor(Peso_tot_classe, c("very low", "low", "high", "very high"))
-  )
+    Peso_tot_classe = factor(Peso_tot_classe, c("very low", "low", "high", "very high")) 
+  ) # queste classi le ho prese da case_when che ho usato per creare la variabile categorica Peso_tot_classe
 
 head(count_peso_tot)
 
-ggplot(count_peso_tot, aes(x = Peso_tot_classe, y = n, fill = Peso_tot_classe)) +
-  geom_col(show.legend = FALSE) + # per evitare una legenda ridondante
-  facet_wrap(~ Varieta,  scales= "free") + # per creare un grafico separato per ogni varietà
+p2 <- ggplot(count_peso_tot, aes(x = Peso_tot_classe, 
+                           y = n, 
+                           fill = Varieta)) + # un colore diverso per varietà
+  geom_col(show.legend = TRUE) + 
+  facet_wrap(~ Varieta) + # per creare un grafico separato per ogni varietà
+  scale_fill_manual(values = c(
+    "Planeta" = "magenta",
+    "Largueta" = "brown",
+    "Espoir" = "orange")) +
   labs(
     title = "Distribuzione osservazioni per classe di peso del frutto",
     x = "Classe di peso",
@@ -380,7 +386,11 @@ ggplot(count_peso_tot, aes(x = Peso_tot_classe, y = n, fill = Peso_tot_classe)) 
     axis.title.y = element_text(margin = margin(r = 15))  # spazio a destra dell'etichetta Y (allontana dal grafico)
   )
 
-### peso vs varietà e trattamento ####
+p2
+
+ggsave("figures/classi_peso_tot.png", width = 8, height = 6, dpi = 300)
+
+### p3 = peso vs varietà e trattamento ####
 # PESO DEL FRUTTO RISPETTO ALLA VARIETA E AL TRATTAMENTO
 # Bagged ha solo 3 osservazioni, una per Varieta, e solo Espoir produce frutto
 # Open produce pesi dei frutti molto variabili, 
@@ -388,8 +398,11 @@ ggplot(count_peso_tot, aes(x = Peso_tot_classe, y = n, fill = Peso_tot_classe)) 
 # open e Open+HP sono le solo ad avere numero di osservazioni confrontabile
 # Open produce pesi più variabili, e con una media più bassa rispetto a Open+HP
 
+# filtro il dataset per Peso_tot > 0 per considerare solo i frutti sviluppati
 
-ggplot(fruit_wide, aes(x = Varieta, y = Peso_tot, fill = Trattamento)) +
+p3 <- data_new %>%
+  filter(Peso_tot > 0) %>%
+  ggplot(aes(x = Varieta, y = Peso_tot, fill = Trattamento)) +
   geom_boxplot() +
     labs(
     title = "Peso del frutto rispetto alla varietà e al trattamento",
@@ -403,13 +416,17 @@ ggplot(fruit_wide, aes(x = Varieta, y = Peso_tot, fill = Trattamento)) +
     axis.title.y = element_text(margin = margin(r = 15))  # spazio a destra dell'etichetta Y (allontana dal grafico)
   )
 
+p3
 
-### resa vs varietà e trattamento ####
+ggsave("figures/peso_frutto.png", width = 8, height = 6, dpi = 300)
+
+
+### p4 = resa vs varietà e trattamento ####
 # RESA DEL SEME RISPETTO ALLA VARIETA E AL TRATTAMENTO
 # Largueta ha mediamente rese minori rispetto alle altre Varieta
 # il trattamento Open ha sempre rese più variabili
 
-data_new %>% 
+p4 <- data_new %>% 
   filter(Peso_tot > 0) %>%
   ggplot(aes(x = Varieta, y = Resa, fill = Trattamento)) +
   geom_boxplot() +
@@ -425,8 +442,13 @@ data_new %>%
     axis.title.y = element_text(margin = margin(r = 15)) 
     )
 
+p4
+
+ggsave("figures/resa_seme.png", width = 8, height = 6, dpi = 300)
+
 str(data_new)
-### biomassa vs varietà ####
+
+### p5 = biomassa vs varietà ####
 # ALLOCAZIONE DELLA BIOMASSA NEL FRUTTO RISPETTO ALLA VARIETA E AL TRATTAMENTO
 # Calcolo il peso medio di ogni componente del frutto (Pericarpo, Endocarpo, Seme) 
 # per ogni combinazione di Varieta e Trattamento
@@ -434,49 +456,112 @@ str(data_new)
 #Largueta produce frutti piu pesanti, con endocarpo più pesante
 # Espoir produce frutti più leggeri
 
-peso_summary_plot <- fruit_long %>%
+colori_varieta <- c(
+  "Planeta"  = "magenta",
+  "Largueta" = "brown",
+  "Espoir"   = "orange"
+)
+
+peso_summary_plot <-  fruit_long %>%
   group_by(Varieta, Componente) %>%
-  summarise(Peso_medio = mean(Peso_comp, na.rm = TRUE), # calcolo media del peso di ogni componente 
-            .groups = "drop")
-
-
-ggplot(peso_summary_plot, aes(x = Varieta, y = Peso_medio, fill = Componente)) +
-  geom_col(position = "dodge") + # dodge per affiancare le barre delle componenti del frutto invece di sovrapporle
-  labs(
-    title = "Peso medio dei componenti del frutto per varietà",
-    x = "Varietà",
-    y = "Peso medio (g)",
-    fill = "Componente"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.title.x = element_text(margin = margin(t = 10)),
-    axis.title.y = element_text(margin = margin(r = 10))
+  summarise(
+    media = mean(Peso_comp, na.rm = TRUE),
+    sd = sd(Peso_comp, na.rm = TRUE),
+    .groups = "drop"
   )
 
-### biomassa vs trattamento ####
+p5 <- ggplot(peso_summary_plot,
+       aes(x = Componente,
+           y = media,
+           fill = Varieta)) +
+  
+  geom_col(position = position_dodge(width = 0.8)) +
+  
+  geom_errorbar(
+    aes(ymin = media - sd,
+        ymax = media + sd),
+    position = position_dodge(width = 0.8),
+    width = 0.2
+  ) +
+  
+  scale_fill_manual(values = colori_varieta) +
+  
+  labs(
+    title = "Peso medio dei componenti del frutto (± SD)",
+    x = "Componente",
+    y = "Peso medio (g)",
+    fill = "Varietà"
+  ) +
+  
+  theme_minimal()
+
+p5
+
+ggsave("figures/allocazione_biomassa_varieta.png", width = 8, height = 6, dpi = 300)
+
+  ### p6 = biomassa vs trattamento ####
 
 # Bagged ha una sola osservazione (non c'è valore medio)
 # Open+HP ha frutti più pesanti, ma con rese simili a Open
 peso_summary_plot2 <- fruit_long %>%
   group_by(Trattamento, Componente) %>%
-  summarise(Peso_medio = mean(Peso_comp, na.rm = TRUE), .groups = "drop")
+  summarise(Peso_medio = mean(Peso_comp, na.rm = TRUE), 
+            sd = sd(Peso_comp, na.rm = TRUE),
+            .groups = "drop") %>% 
+  mutate(sd = ifelse(Trattamento == "Bagged", 0, sd))
 
-ggplot(peso_summary_plot2, aes(x = Trattamento, y = Peso_medio, fill = Componente)) +
+# avendo una sola osservazione per Bagged, non posso calcolare la deviazione standard
+# perciò imposto la deviazione standard a 0 per Bagged, in modo che le barre 
+# d'errore non vengano visualizzate per questo trattamento
+  
+colori_trattamento <- c(
+  "Bagged"  = "#F8766D",
+  "Open"    = "#00BA38",
+  "Open_HP" = "#619CFF"
+)
+
+p6 <- ggplot(peso_summary_plot2, 
+             aes(x = Trattamento,       # Mettiamo il trattamento sulla X interna
+                 y = Peso_medio, 
+                 fill = Trattamento)) + # Coloriamo in base al trattamento
+  
   geom_col(position = "dodge") +
+  
+  # Aggiungiamo le barre della deviazione standard, con width per la larghezza delle barre e color per il colore
+  geom_errorbar(
+    aes(ymin = Peso_medio - sd, ymax = Peso_medio + sd),
+    width = 0.2,
+    color = "black"
+  ) +
+  
+  # Dividiamo il grafico in 3 pannelli (uno per componente) 
+  # Questo metterà il nome del componente sotto (o sopra) ogni gruppo di barre
+  facet_wrap(~ Componente, strip.position = "bottom") + 
+  
+  # Applichiamo i tuoi colori personalizzati
+  scale_fill_manual(values = colori_trattamento) +
+  
   labs(
     title = "Allocazione biomassa nel frutto rispetto al trattamento",
-    x = "Trattamento",
+    x = "Componenti del frutto",
     y = "Peso medio (g)",
-    fill = "Componenti del frutto") +
+    fill = "Trattamento"
+  ) +
+  
   theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5, margin = margin(b = 15)), 
     axis.title.x = element_text(margin = margin(t = 15)), 
-    axis.title.y = element_text(margin = margin(r = 15))
+    axis.title.y = element_text(margin = margin(r = 15)),
+    axis.text.x = element_blank(),          # Nasconde i nomi dei trattamenti sulla X per non fare confusione...
+    axis.ticks.x = element_blank(),         # ...perché l'etichetta del componente e il colore bastano!
+    strip.placement = "outside",            # Mette il nome del componente sotto l'asse delle X
+    strip.text = element_text(size = 11) # Rende i nomi dei componenti ben visibili
   )
-  
+p6
+
+ggsave("figures/allocazione_biomassa_trattamento.png", width = 8, height = 6, dpi = 300)
+
 ### PARTE 8: OUTPUT ####
 
 # Tabella pulita
@@ -487,16 +572,6 @@ write.csv(summary, "output/summary_statistics.csv", row.names = FALSE)
 
 # Dataset finale con le nuove variabili
 saveRDS(data_new, "output/data_final.rds")
-
-# Grafici
-ggsave("figures/pTOT_pSEME.png", width = 8, height = 6, dpi = 300)
-ggsave("figures/classi_peso_tot.png", width = 8, height = 6, dpi = 300)
-ggsave("figures/peso_frutto.png", width = 8, height = 6, dpi = 300)
-ggsave("figures/resa_seme.png", width = 8, height = 6, dpi = 300)
-ggsave("figures/allocazione_biomassa_varieta.png", width = 8, height = 6, dpi = 300)
-ggsave("figures/allocazione_biomassa_trattamento.png", width = 8, height = 6, dpi = 300)
-
-
 
 
 ### PARTE 11: GITHUB ####
