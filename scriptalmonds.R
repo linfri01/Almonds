@@ -596,9 +596,10 @@ writeLines(c(
 usethis::use_git() 
 usethis::use_github() 
 
-
-
-
+# Aggiungo modifiche fatte ai file rds e pdf presenti nella mia cartella locale
+system("git add output/data_final.rds output/Interpretazione.pdf")
+system('git commit -m "Aggiunti file rds e pdf aggiornati"')
+system("git push")
 
 
 
