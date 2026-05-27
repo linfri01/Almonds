@@ -1,6 +1,7 @@
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(patchwork)
 
 
 ### PARTE 1: IMPORTAZIONE DEL DATASET ####
@@ -19,8 +20,6 @@ library(tidyr)
 # entomofila alla qualità dei frutti di mandorlo.
 # Di seguito vengono analizzati i dati del secondo foglio "Fruit_quality".
 
-
-getwd() # per controllare che la working directory sia corretta
 
 dati_raw <- read.csv2("data/data_raw/Fruit_quality.CSV") 
 
@@ -43,7 +42,7 @@ nrow(dati_raw)
 ncol(dati_raw)
 
 # per trasformare character in factor e numeric e rinominare le colonne
-dati_raw <- dati_raw %>%
+data_clean <- dati_raw %>%
   transmute(             # uso transmute per modificare colonne già esistenti
     Varieta = as.factor(Varieties), # ed eliminare quelle vecchie
     Trattamento = as.factor(Treatments),
@@ -52,18 +51,18 @@ dati_raw <- dati_raw %>%
     Endocarpo_g = as.numeric(Endocarp_g)
   )
   
-str(dati_raw)
+str(data_clean)
 
 # conteggio per categorie
-dati_raw %>% 
+data_clean %>% 
   group_by(Trattamento) %>%
   summarise(count = n())
 
-dati_raw %>% 
+data_clean %>% 
   group_by(Varieta) %>%
   summarise(count = n())
 
-dati_raw %>% 
+data_clean %>% 
   group_by(Varieta, Trattamento) %>%
   summarise(count = n())
 
@@ -74,8 +73,6 @@ dati_raw %>%
 # significa che il frutto in quel caso non si è sviluppato
 
 # il trattamento "bagged" ha una sola osservazione per varietà
-
-data_clean <- dati_raw
 
 
 ### PARTE 4: NUOVE VARIABILI ####
@@ -177,7 +174,7 @@ fruit_long <- data_new %>%
 # prima di pivotare di nuovo, altrimenti pivot_wider 
 # non sa come ricostruire le righe originali
 # e restituirebbe una lista di valori per ogni misura
-# senza riconoscere a quale frutto appartengono
+# senza riconoscere a quale frutto appartiene
 
 fruit_long_2 <- data_new %>%
   mutate(frutto_id = row_number()) %>% # creo un numero unico per ogni frutto
@@ -202,29 +199,154 @@ fruit_wide2 <- fruit_long_2 %>%
 
 ### PARTE 7: GRAFICI ####
 
-### peso totale vs peso del seme ####
+### p1 = peso totale vs peso del seme ####
 # RELAZIONE PESO DEL FRUTTO E PESO DEL SEME
 # Tendenzialmente, il peso del seme aumenta all'aumentare del peso totale
 
-ggplot(fruit_wide, aes(x = Peso_tot, y = Seme_g)) +
-  geom_point(aes(color = Varieta, shape = Trattamento), # aggiungo colore e forma per distinguere le varietà e i trattamenti
-             size = 1.5, alpha= 0.5) + # dimensione e trasparenza dei punti per migliorare la leggibilità
-  labs(                                # etichette
-    title = "Relazione tra peso del frutto e del seme",
+
+# grafico generale
+p1_generale <- ggplot(fruit_wide,
+                 aes(x = Peso_tot,
+                     y = Seme_g,
+                     color = Trattamento)) +
+  
+  geom_point(size = 2,
+             alpha = 0.6) +
+  
+  scale_x_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, by = 2.5) 
+  ) +
+  
+  scale_y_continuous(
+  limits = c(0, 2),
+  breaks = seq(0, 2, by = 0.5)
+  ) +
+  
+  labs(
+    title = "Relazione generale tra peso del frutto e peso del seme",
     x = "Peso del frutto (g)",
     y = "Peso del seme (g)",
-    color = "Varietà",
-    shape = "Trattamento"
+    color = "Trattamento"
   ) +
-  theme_minimal(base_size = 12) + # dimensione base del testo più grande
+  
+  theme_minimal(base_size = 12) +
+  
   theme(
-    plot.title = element_text(hjust = 0.5, margin = margin(b = 15)), # spazio sotto il titolo
-    axis.title.x = element_text(margin = margin(t = 15)), # spazio sopra l'etichetta X (allontana dal grafico)
-    axis.title.y = element_text(margin = margin(r = 15))  # spazio a destra dell'etichetta Y (allontana dal grafico)
+    plot.title = element_text(hjust = 0.5,
+                              face = "bold"),
+    legend.position = "bottom"
   )
- 
 
-### classi di peso del frutto ####
+# grafico trattamento 1
+p1_1 <- ggplot(subset(fruit_wide, Varieta == "Espoir"),
+             aes(x = Peso_tot,
+                 y = Seme_g,
+                 color = Trattamento)) +
+  
+  geom_point(size = 1.8,
+             alpha = 0.7) +
+  
+  scale_x_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, by = 2.5) 
+  ) +
+  
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(0, 2, by = 0.5)
+  ) +
+  
+  
+  labs(
+    title = "Espoir",
+    x = "Peso frutto (g)",
+    y = "Peso seme (g)"
+  ) +
+  
+  theme_minimal(base_size = 10) +
+  
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
+
+# grafico trattamento 2
+p1_2 <- ggplot(subset(fruit_wide, Varieta == "Largueta"),
+             aes(x = Peso_tot,
+                 y = Seme_g,
+                 color = Trattamento)) +
+  
+  geom_point(size = 1.8,
+             alpha = 0.7) +
+  
+  scale_x_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, by = 2.5) 
+  ) +
+  
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(0, 2, by = 0.5)
+  ) +
+  
+  labs(
+    title = "Largueta",
+    x = "Peso frutto (g)",
+    y = "Peso seme (g)"
+  ) +
+  
+  theme_minimal(base_size = 10) +
+  
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
+
+# grafico trattamento 3
+p1_3 <- ggplot(subset(fruit_wide, Varieta == "Planeta"),
+             aes(x = Peso_tot,
+                 y = Seme_g,
+                 color = Trattamento)) +
+  
+  geom_point(size = 1.8,
+             alpha = 0.7) +
+  
+  scale_x_continuous(
+    limits = c(0, 10),
+    breaks = seq(0, 10, by = 2.5) 
+  ) +
+  
+  scale_y_continuous(
+    limits = c(0, 2),
+    breaks = seq(0, 2, by = 0.5)
+  ) +
+  
+  
+  labs(
+    title = "Planeta",
+    x = "Peso frutto (g)",
+    y = "Peso seme (g)"
+  ) +
+  
+  theme_minimal(base_size = 10) +
+  
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
+
+p1 <-
+  p1_generale /
+  (p1_1 | p1_2 | p1_3)
+
+p1
+
+# salvo il grafico p1 nella cartella figures
+ggsave("figures/pTOT_pSEME.png", plot = p1, width = 12, height =8, dpi = 300)
+
+
+### p2 = classi di peso del frutto ####
 # DISTRIBUZIONE DELLE OSSERVAZIONI PER CLASSE DI PESO DEL FRUTTO PER VARIETÀ
 # conto il numero di osservazioni per ogni combinazione di varietà e classe di peso del frutto
 # ordino le classi di peso in modo logico (very low, low, high, very high) 
