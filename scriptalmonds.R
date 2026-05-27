@@ -15,7 +15,7 @@ library(patchwork)
 # in relazione a diversi trattamenti di impollinazione:
 # - Open: impollinazione naturale
 # - Open+HP: impollinazione naturale più impollinazione manuale 
-# - Bagged:  con frutti protetti da una retina per evitare l'impollinazione naturale
+# - Bagged:  con frutti protetti da una retina per impedire l'impollinazione naturale
 # I dati sono stati raccolti al fine di valutare il contributo dell'impollinazione 
 # entomofila alla qualità dei frutti di mandorlo.
 # Di seguito vengono analizzati i dati del secondo foglio "Fruit_quality".
@@ -126,7 +126,7 @@ summary <- data_new %>%
     count = n(), # numero di osservazioni per ogni combinazione di Varieta e Trattamento
     across(c(Peso_tot, Resa), # calcolo media, sd, min e max per le due colonne Peso_tot e Resa
            list(mean = ~ mean(.x, na.rm = TRUE), # lista di funzioni da applicare a ciascuna colonna
-                sd = ~ sd(.x, na.rm = TRUE),
+                sd = ~ sd(.x, na.rm = TRUE), # .x indica la colonna a cui applicare la funzione
                 min = ~ min(.x, na.rm = TRUE),
                 max = ~ max(.x, na.rm = TRUE)))
   )
@@ -205,35 +205,35 @@ fruit_wide2 <- fruit_long_2 %>%
 
 
 # grafico generale
-p1_generale <- ggplot(fruit_wide,
-                 aes(x = Peso_tot,
+p1_generale <- ggplot(fruit_wide, # dataset da cui prendo le variabili
+                 aes(x = Peso_tot,  
                      y = Seme_g,
-                     color = Trattamento)) +
+                     color = Trattamento)) + #colore i base al trattamento
   
-  geom_point(size = 2,
-             alpha = 0.6) +
+  geom_point(size = 2, # dimensione dei punti
+             alpha = 0.6) + # trasparenza dei punti per evitare sovrapposizioni troppo marcate
   
-  scale_x_continuous(
-    limits = c(0, 10),
-    breaks = seq(0, 10, by = 2.5) 
+  scale_x_continuous( # per definire i limiti e gli intervalli dell'asse x
+    limits = c(0, 10), # limiti da 0 a 10 
+    breaks = seq(0, 10, by = 2.5) # intervalli di 2.5 
   ) +
   
-  scale_y_continuous(
+  scale_y_continuous( # per definire i limiti e gli intervalli dell'asse y
   limits = c(0, 2),
   breaks = seq(0, 2, by = 0.5)
   ) +
   
-  labs(
+  labs( # etichette e titolo del grafico
     title = "Relazione generale tra peso del frutto e peso del seme",
     x = "Peso del frutto (g)",
     y = "Peso del seme (g)",
     color = "Trattamento"
   ) +
   
-  theme_minimal(base_size = 12) +
+  theme_minimal(base_size = 12) + 
   
   theme(
-    plot.title = element_text(hjust = 0.5,
+    plot.title = element_text(hjust = 0.5, # per centrare il titolo
                               face = "bold"),
     legend.position = "bottom"
   )
@@ -349,7 +349,7 @@ ggsave("figures/pTOT_pSEME.png", plot = p1, width = 12, height =8, dpi = 300)
 ### p2 = classi di peso del frutto ####
 # DISTRIBUZIONE DELLE OSSERVAZIONI PER CLASSE DI PESO DEL FRUTTO PER VARIETÀ
 # conto il numero di osservazioni per ogni combinazione di varietà e classe di peso del frutto
-# ordino le classi di peso in modo logico (very low, low, high, very high) 
+# ordino le classi di peso in modo logico con c(very low, low, high, very high) 
 # per una miglior visualizzazione 
 
 # Espoir ha il maggior numero di frutti con peso basso o molto basso
@@ -365,12 +365,13 @@ count_peso_tot <- data_new %>%
 
 head(count_peso_tot)
 
+# tutti i grafici sono alla stessa scala per renderli confrontabili 
 p2 <- ggplot(count_peso_tot, aes(x = Peso_tot_classe, 
                            y = n, 
                            fill = Varieta)) + # un colore diverso per varietà
   geom_col(show.legend = TRUE) + 
   facet_wrap(~ Varieta) + # per creare un grafico separato per ogni varietà
-  scale_fill_manual(values = c(
+  scale_fill_manual(values = c( # per definire colori personalizzati per ogni varietà
     "Planeta" = "magenta",
     "Largueta" = "brown",
     "Espoir" = "orange")) +
@@ -403,7 +404,9 @@ ggsave("figures/classi_peso_tot.png", width = 8, height = 6, dpi = 300)
 p3 <- data_new %>%
   filter(Peso_tot > 0) %>%
   ggplot(aes(x = Varieta, y = Peso_tot, fill = Trattamento)) +
-  geom_boxplot() +
+  geom_boxplot() + # il boxplot mostra la mediana, il primo e terzo quartile, e gli outliers
+  # Questo aggiunge un punto geometrico per la media (es. un rombo rosso)
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 1, color = "yellow", position = position_dodge(0.75)) +
     labs(
     title = "Peso del frutto rispetto alla varietà e al trattamento",
     x = "Varietà",
@@ -430,6 +433,7 @@ p4 <- data_new %>%
   filter(Peso_tot > 0) %>%
   ggplot(aes(x = Varieta, y = Resa, fill = Trattamento)) +
   geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", shape = 18, size = 1, color = "yellow", position = position_dodge(0.75)) +
   labs(
     title = "Resa del seme rispetto alla varietà e al trattamento",
     x = "Varietà",
@@ -527,18 +531,18 @@ p6 <- ggplot(peso_summary_plot2,
   
   geom_col(position = "dodge") +
   
-  # Aggiungiamo le barre della deviazione standard, con width per la larghezza delle barre e color per il colore
+  # Aggiungo le barre della deviazione standard, con width per la larghezza delle barre e color per il colore
   geom_errorbar(
     aes(ymin = Peso_medio - sd, ymax = Peso_medio + sd),
     width = 0.2,
     color = "black"
   ) +
   
-  # Dividiamo il grafico in 3 pannelli (uno per componente) 
-  # Questo metterà il nome del componente sotto (o sopra) ogni gruppo di barre
+  # Divido il grafico in 3 pannelli (uno per componente) 
+  # Questo metterà il nome del componente sotto ogni gruppo di barre
   facet_wrap(~ Componente, strip.position = "bottom") + 
   
-  # Applichiamo i tuoi colori personalizzati
+  # Applicoi colori personalizzati
   scale_fill_manual(values = colori_trattamento) +
   
   labs(
@@ -553,8 +557,8 @@ p6 <- ggplot(peso_summary_plot2,
     plot.title = element_text(hjust = 0.5, margin = margin(b = 15)), 
     axis.title.x = element_text(margin = margin(t = 15)), 
     axis.title.y = element_text(margin = margin(r = 15)),
-    axis.text.x = element_blank(),          # Nasconde i nomi dei trattamenti sulla X per non fare confusione...
-    axis.ticks.x = element_blank(),         # ...perché l'etichetta del componente e il colore bastano!
+    axis.text.x = element_blank(),          # Nasconde i nomi dei trattamenti sulla X per non fare confusione
+    axis.ticks.x = element_blank(),         # perché l'etichetta del componente e il colore bastano
     strip.placement = "outside",            # Mette il nome del componente sotto l'asse delle X
     strip.text = element_text(size = 11) # Rende i nomi dei componenti ben visibili
   )
@@ -571,6 +575,7 @@ write.csv(data_clean, "data/data_clean/data_clean.csv", row.names = FALSE)
 write.csv(summary, "output/summary_statistics.csv", row.names = FALSE)
 
 # Dataset finale con le nuove variabili
+# in RDS perché mantiene i tipi di variabili e i factor 
 saveRDS(data_new, "output/data_final.rds")
 
 
@@ -591,18 +596,7 @@ writeLines(c(
 usethis::use_git() 
 usethis::use_github() 
 
-# per rimuovere i file già tracciati da git prima che aggiungessi .gitignore, 
-# ma che ora sono stati aggiunti al .gitignore
-system("git rm -r --cached data/data_raw")
-system("git rm -r --cached data/data_clean")
-system("git rm --cached *.Rproj")
-# questo comando rimuove i file dalla cache di git, ma li lascia intatti nella cartella locale
-system('git commit -m "Remove data from repository (ignored via gitignore)"')
 
-# per fare il commit e push delle modifiche al repository GitHub
-system("git push origin master")
-# controllo stato del repository dopo il push
-system("git status")
 
 
 
